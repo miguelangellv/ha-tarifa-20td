@@ -1,6 +1,6 @@
 [project]
 name = "tarifa_20td"
-version = "2.1.0"
+version = "2.2.0"
 description = "Componente para Home Assisant para usuarios con Tarifas 2.0 y 3.0 TD"
 authors = [
     { name = "Miguel Ángel López", email = "miguel.angel.lopez.vicente@gmail.com" }
