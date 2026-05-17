@@ -1,0 +1,68 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "tariff": "Tarifa"
+        }
+      },
+      "tariff20": {
+        "data": {
+          "P1": "Preu P1 (punta)",
+          "P2": "Preu P2 (pla)",
+          "P3": "Preu P3 (vall)",
+          "diary_cost": "Cost diari"
+        }
+      },
+      "tariff30": {
+        "data": {
+          "P1": "Preu P1",
+          "P3": "Preu P3",
+          "P2": "Preu P2",
+          "P4": "Preu P4",
+          "P5": "Preu P5",
+          "P6": "Preu P6",
+          "diary_cost": "Cost diari"
+        }
+      }
+    }
+  },
+
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "tariff": "Tarifa"
+        }
+      },
+      "tariff20": {
+        "data": {
+          "P1": "Preu P1 (punta)",
+          "P2": "Preu P2 (pla)",
+          "P3": "Preu P3 (valle",
+          "diary_cost": "Cost diari"
+        }
+      },
+      "tariff30": {
+        "data": {
+          "P1": "Preu P1",
+          "P2": "Preu P2",
+          "P3": "Preu P3",
+          "P4": "Preu P4",
+          "P5": "Preu P5",
+          "P6": "Preu P6",
+          "diary_cost": "Cost diari"
+        }
+      }
+    }
+  },
+
+  "selector": {
+    "periods": {
+      "options": {
+        "tariff_20": "Tarifa 2.0 TD (3 periodes)",
+        "tariff_30": "Tarifa 3.0 TD (6 periodes)"
+      }
+    }
+  }
+}
