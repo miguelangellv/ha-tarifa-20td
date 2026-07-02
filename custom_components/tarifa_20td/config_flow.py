@@ -43,7 +43,7 @@ _LOGGER = logging.getLogger(__name__)
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Config flow for Tariff TD."""
 
-    VERSION = 2
+    VERSION = 3
     tariff = TARIFF_20
 
     @staticmethod
