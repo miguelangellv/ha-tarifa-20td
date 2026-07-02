@@ -96,7 +96,7 @@ jobs:
           #### HACS (Recomendado)
           1. Abre HACS en tu instancia de Home Assistant
           2. Ve a "Integraciones"
-          3. Busca "Gasolineras de España"
+          3. Busca "Tarifa 2.0TD"
           4. Haz clic en "Descargar"
           5. Reinicia Home Assistant
 
@@ -107,8 +107,8 @@ jobs:
 
           ### 🔗 Enlaces
 
-          - [Documentación](https://github.com/MiguelAngelLV/ha-gas-station-spain)
-          - [Reportar un problema](https://github.com/MiguelAngelLV/ha-gas-station-spain/issues)
+          - [Documentación](https://github.com/MiguelAngelLV/tarifa-20td)
+          - [Reportar un problema](https://github.com/MiguelAngelLV/tarifa-20td/issues)
 
           ### 📊 Información de la Release
 
