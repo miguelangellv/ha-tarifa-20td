@@ -11,6 +11,9 @@ jobs:
     # Solo ejecutar si la PR tiene la etiqueta "release"
     if: contains(github.event.pull_request.labels.*.name, 'release')
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
 
     steps:
       - name: Checkout code
@@ -126,7 +129,7 @@ jobs:
           echo "✅ Los archivos requeridos fueron modificados"
 
       - name: Comment validation results
-        if: success()
+        if: success() && github.event.pull_request.head.repo.full_name == github.repository
         uses: actions/github-script@v7
         with:
           script: |
@@ -154,7 +157,7 @@ jobs:
             });
 
       - name: Comment validation errors
-        if: failure()
+        if: failure() && github.event.pull_request.head.repo.full_name == github.repository
         uses: actions/github-script@v7
         with:
           script: |
