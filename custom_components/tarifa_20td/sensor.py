@@ -10,13 +10,14 @@ from tariff_td import Tariff20TD, Tariff30TD, TariffTD
 from typing_extensions import override
 
 from homeassistant.components.sensor import (
-    RestoreEntity,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.helpers.event import async_track_point_in_time
+
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
     CONF_DIARY_COST,
