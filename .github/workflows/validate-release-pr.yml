@@ -4,13 +4,17 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, labeled]
     branches:
-      - main
+      - main  # Debe coincidir con MAIN_BRANCH de .github/project.env
 
 jobs:
   validate:
     # Solo ejecutar si la PR tiene la etiqueta "release"
+    # Debe coincidir con RELEASE_LABEL de .github/project.env
     if: contains(github.event.pull_request.labels.*.name, 'release')
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
 
     steps:
       - name: Checkout code
@@ -18,12 +22,17 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Load project variables
+        uses: cardinalby/export-env-action@v2
+        with:
+          envFile: .github/project.env
+
       - name: Validate PR title format
         run: |
           PR_TITLE="${{ github.event.pull_request.title }}"
 
-          # Verificar que el título comience con 'v' seguido de un número de versión
-          if [[ ! "$PR_TITLE" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          # Verificar que el título siga el patrón de versión definido
+          if [[ ! "$PR_TITLE" =~ $VERSION_PATTERN ]]; then
             echo "❌ El título de la PR debe ser un número de versión (ej: v2.3.1)"
             echo "Título actual: $PR_TITLE"
             exit 1
@@ -34,8 +43,8 @@ jobs:
       - name: Get versions from files
         id: versions
         run: |
-          MANIFEST_VERSION=$(jq -r '.version' custom_components/tarifa_20td/manifest.json)
-          PYPROJECT_VERSION=$(grep '^version = ' pyproject.toml | cut -d'"' -f2)
+          MANIFEST_VERSION=$(jq -r '.version' "$MANIFEST_PATH")
+          PYPROJECT_VERSION=$(grep '^version = ' "$PYPROJECT_PATH" | cut -d'"' -f2)
           PR_VERSION="${{ github.event.pull_request.title }}"
           PR_VERSION="${PR_VERSION#v}"  # Eliminar 'v' del inicio
 
@@ -57,10 +66,10 @@ jobs:
 
           # Verificar que manifest.json y pyproject.toml tengan la misma versión
           if [ "$MANIFEST_VERSION" != "$PYPROJECT_VERSION" ]; then
-            echo "❌ Las versiones en manifest.json ($MANIFEST_VERSION) y pyproject.toml ($PYPROJECT_VERSION) no coinciden"
+            echo "❌ Las versiones en ${MANIFEST_PATH} ($MANIFEST_VERSION) y ${PYPROJECT_PATH} ($PYPROJECT_VERSION) no coinciden"
             ERRORS=$((ERRORS + 1))
           else
-            echo "✅ Versiones en manifest.json y pyproject.toml coinciden: $MANIFEST_VERSION"
+            echo "✅ Versiones en ${MANIFEST_PATH} y ${PYPROJECT_PATH} coinciden: $MANIFEST_VERSION"
           fi
 
           # Verificar que la versión coincida con el título de la PR
@@ -106,32 +115,33 @@ jobs:
       - name: Validate changed files
         run: |
           # Obtener archivos modificados en la PR
-          CHANGED_FILES=$(git diff --name-only origin/main...HEAD)
+          CHANGED_FILES=$(git diff --name-only "origin/${MAIN_BRANCH}...HEAD")
 
           echo "Archivos modificados:"
           echo "$CHANGED_FILES"
 
           # Verificar que al menos manifest.json fue modificado
-          if ! echo "$CHANGED_FILES" | grep -q "custom_components/tarifa_20td/manifest.json"; then
-            echo "❌ manifest.json debe ser modificado en una PR de release"
+          if ! echo "$CHANGED_FILES" | grep -qF "$MANIFEST_PATH"; then
+            echo "❌ ${MANIFEST_PATH} debe ser modificado en una PR de release"
             exit 1
           fi
 
           # Verificar que pyproject.toml fue modificado
-          if ! echo "$CHANGED_FILES" | grep -q "pyproject.toml"; then
-            echo "❌ pyproject.toml debe ser modificado en una PR de release"
+          if ! echo "$CHANGED_FILES" | grep -qF "$PYPROJECT_PATH"; then
+            echo "❌ ${PYPROJECT_PATH} debe ser modificado en una PR de release"
             exit 1
           fi
 
           echo "✅ Los archivos requeridos fueron modificados"
 
       - name: Comment validation results
-        if: success()
+        if: success() && github.event.pull_request.head.repo.full_name == github.repository
         uses: actions/github-script@v7
         with:
           script: |
             const version = '${{ steps.versions.outputs.pr }}';
-            const comment = `## ✅ Validación de Release Exitosa
+            const project = process.env.PROJECT_NAME;
+            const comment = `## ✅ Validación de Release de ${project} Exitosa
 
             La PR de release para la versión **v${version}** ha pasado todas las validaciones:
 
@@ -154,11 +164,12 @@ jobs:
             });
 
       - name: Comment validation errors
-        if: failure()
+        if: failure() && github.event.pull_request.head.repo.full_name == github.repository
         uses: actions/github-script@v7
         with:
           script: |
-            const comment = `## ❌ Validación de Release Fallida
+            const project = process.env.PROJECT_NAME;
+            const comment = `## ❌ Validación de Release de ${project} Fallida
 
             La PR de release no pasó todas las validaciones. Por favor, revisa los errores en los logs del workflow.
 

@@ -4,11 +4,12 @@ on:
   pull_request:
     types: [closed]
     branches:
-      - main
+      - main  # Debe coincidir con MAIN_BRANCH de .github/project.env
 
 jobs:
   create-release:
     # Solo ejecutar si la PR fue mergeada y tiene la etiqueta "release"
+    # Debe coincidir con RELEASE_LABEL de .github/project.env
     if: github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'release')
     runs-on: ubuntu-latest
     permissions:
@@ -20,12 +21,17 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: main
+          ref: main  # Debe coincidir con MAIN_BRANCH de .github/project.env
+
+      - name: Load project variables
+        uses: cardinalby/export-env-action@v2
+        with:
+          envFile: .github/project.env
 
       - name: Get version from manifest
         id: get_version
         run: |
-          VERSION=$(jq -r '.version' custom_components/tarifa_20td/manifest.json)
+          VERSION=$(jq -r '.version' "$MANIFEST_PATH")
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Version from manifest: $VERSION"
 
@@ -85,30 +91,21 @@ jobs:
 
           # Crear release notes
           RELEASE_NOTES=$(cat <<EOF
-          ## 🚀 Gas Station Spain v$VERSION
+          ## 🚀 ${PROJECT_NAME} v$VERSION
 
           $CHANGELOG
 
           ---
 
-          ### 📦 Instalación
-
-          #### HACS (Recomendado)
-          1. Abre HACS en tu instancia de Home Assistant
-          2. Ve a "Integraciones"
-          3. Busca "Tarifa 2.0TD"
-          4. Haz clic en "Descargar"
-          5. Reinicia Home Assistant
-
           #### Manual
-          1. Descarga el archivo \`tarifa_20td.zip\` de los assets
-          2. Extrae el contenido en \`custom_components/tarifa_20td/\`
+          1. Descarga el archivo \`${INTEGRATION_DOMAIN}.zip\` de los assets
+          2. Extrae el contenido en \`${INTEGRATION_DIR}/\`
           3. Reinicia Home Assistant
 
           ### 🔗 Enlaces
 
-          - [Documentación](https://github.com/MiguelAngelLV/tarifa-20td)
-          - [Reportar un problema](https://github.com/MiguelAngelLV/tarifa-20td/issues)
+          - [Documentación](https://github.com/${{ github.repository }})
+          - [Reportar un problema](https://github.com/${{ github.repository }}/issues)
 
           ### 📊 Información de la Release
 
@@ -122,7 +119,7 @@ jobs:
           gh release create "v$VERSION" \
             --title "v$VERSION" \
             --notes "$RELEASE_NOTES" \
-            --target main
+            --target "$MAIN_BRANCH"
 
           echo "✅ GitHub Release v$VERSION created successfully"
 
@@ -132,16 +129,16 @@ jobs:
           VERSION="${{ steps.get_version.outputs.version }}"
 
           # Crear directorio temporal
-          mkdir -p /tmp/tarifa_20td
+          mkdir -p "/tmp/${INTEGRATION_DOMAIN}"
 
           # Copiar archivos de la integración
-          cp -r custom_components/tarifa_20td/* /tmp/tarifa_20td/
+          cp -r "$INTEGRATION_DIR"/* "/tmp/${INTEGRATION_DOMAIN}/"
 
           # Crear archivo zip
           cd /tmp
-          zip -r tarifa_20td.zip tarifa_20td/
+          zip -r "${INTEGRATION_DOMAIN}.zip" "${INTEGRATION_DOMAIN}/"
 
-          echo "✅ Archive created: tarifa_20td.zip"
+          echo "✅ Archive created: ${INTEGRATION_DOMAIN}.zip"
 
       - name: Upload release archive
         if: steps.check_tag.outputs.exists == 'false'
@@ -151,7 +148,7 @@ jobs:
           VERSION="${{ steps.get_version.outputs.version }}"
 
           # Subir el archivo a la release
-          gh release upload "v$VERSION" /tmp/tarifa_20td.zip
+          gh release upload "v$VERSION" "/tmp/${INTEGRATION_DOMAIN}.zip"
 
           echo "✅ Archive uploaded to release v$VERSION"
 
@@ -170,7 +167,7 @@ jobs:
 
           ### 📥 Descargas
 
-          - **tarifa_20td.zip** - Integración completa para instalación manual
+          - **${INTEGRATION_DOMAIN}.zip** - Integración completa para instalación manual
           EOF
           )
 
